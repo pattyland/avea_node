@@ -8,6 +8,7 @@ var colorS = require("onecolor");
 
 var bulb = null;
 var perifSel = null;
+// Change this text to something that describes your lamp
 const txtIdLamp="la lampara de pie del comedor";
 
 // Set this value to null if you only have one lamp ...  
