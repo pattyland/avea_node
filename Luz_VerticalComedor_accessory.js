@@ -8,8 +8,11 @@ var colorS = require("onecolor");
 
 var bulb = null;
 var perifSel = null;
-const uuidMyLamp = "7cec79d7ad1d";
-const txtIdLamp="la lampara de pie del comedor" 
+const txtIdLamp="la lampara de pie del comedor";
+
+// Set this value to null if you only have one lamp ...  
+const uuidMyLamp = null;
+//const uuidMyLamp = "7cec79d7ad1d";
 
 // Replace the ".txt" extension with ".js" and paste the file inside the accesories folder of your Hombridge instalation folder.
 // Example Created by Alblahm, Nov 20th.
@@ -23,29 +26,37 @@ var OFFICELIGHT = {
   brightness: 50, // percentage
   hue: 359,
   saturation: 99,
+  bChangeSth: false,
 
   setPowerOn: function(onValue) { 
     OFFICELIGHT.powerOn = onValue;
-    //Se modifica el estado del dispositivo ...
-    OFFICELIGHT.sendToLight(onValue);
+    if((onValue==false)||(OFFICELIGHT.bChangeSth == false)){
+    	//Se modifica el estado del dispositivo ...
+    	OFFICELIGHT.sendToLight(onValue);
+    }
   },
   setHue: function(hue){
     //console.log("... Fijando el matiz a %s", hue);
     OFFICELIGHT.hue = hue;
+    OFFICELIGHT.bChangeSth = true;
     OFFICELIGHT.sendToLight(true);
   },
   setSaturation: function(saturation){
     //console.log("... Fijando la saturacion a %s", saturation);
     OFFICELIGHT.saturation = saturation;
+    OFFICELIGHT.bChangeSth = true;
+    OFFICELIGHT.sendToLight(true);
   },
   setBrightness: function(brightness) {
     //console.log("... Fijando el brillo a %s", brightness);
     OFFICELIGHT.brightness = brightness;
+    OFFICELIGHT.bChangeSth = true;
+    OFFICELIGHT.sendToLight(true);
   },
   sendToLight: function(posValue){
     // setColor(white,red,green,blue,TimeToSet en ms), los valores van de 0 a 4095
     if(posValue==true){
-      console.log("... Encendiendo %s!",txtIdLamp);
+      //console.log("... Encendiendo %s!",txtIdLamp);
       //console.log("... Enviando comando a la luz");
       //console.log("... Color AVEA: Hue:" + (OFFICELIGHT.hue).toString() + ", Sat:" + (OFFICELIGHT.saturation).toString() + ", Bright:" + (OFFICELIGHT.brightness).toString());
       var myHsbColor = colorS('hsv(' + (OFFICELIGHT.hue).toString() + ',' + (OFFICELIGHT.saturation).toString() + ',' + (OFFICELIGHT.brightness).toString() +')');
@@ -56,10 +67,10 @@ var OFFICELIGHT = {
       var iComp="0x" + Math.floor(Math.min(4095,(OFFICELIGHT.brightness*4096)/100)).toString(16).toUpperCase();
       bulb.setColor(new avea.Color(iComp, rComp, gComp, bComp), 0x0ff);
     }else{
-      console.log("... Apagando %s!", txtIdLamp);
+      //console.log("... Apagando %s!", txtIdLamp);
       bulb.setColor(new avea.Color(0x000, 0x000, 0x000, 0x000), 0x5ff);
+      OFFICELIGHT.bChangeSth = false;
     }
-
   },
   identify: function() {
     console.log("Identify the light!");
@@ -69,13 +80,13 @@ var OFFICELIGHT = {
 // Generate a consistent UUID for our light Accessory that will remain the same even when
 // restarting our server. We use the `uuid.generate` helper function to create a deterministic
 // UUID based on an arbitrary "namespace" and the word "OFFICELIGHT".
-var lightUUID = uuid.generate('hap-nodejs:accessories:OFFICELIGHT');
+var lightUUID = uuid.generate('hap-nodejs:accessories:OFFICELIGHT'+ (uuidMyLamp==null ? null : uuidMyLamp.replace(/\s+/g,'')));
 
 // This is the Accessory that we'll return to HAP-NodeJS that represents our fake light.
 var light = exports.accessory = new Accessory('Office Light', lightUUID);
 
 // Add properties for publishing (in case we're using Core.js and not BridgedCore.js)
-light.username = "FF:FF:FF:FF:FF:1A";
+light.username = "FF:FA:FF:CF:DF:1A";
 light.pincode = "031-45-154";
 
 // set some basic properties (these values are arbitrary and setting them is optional)
@@ -95,15 +106,15 @@ light
 // Add the actual Lightbulb Service and listen for change events from iOS.
 // We can see the complete list of Services and Characteristics in `lib/gen/HomeKitTypes.js`
 light
-  .addService(Service.Lightbulb, "Lampara de Pie") // services exposed to the user should have "names" like "Fake Light" for us
+  .addService(Service.Lightbulb, "Lámpara de Pie") // services exposed to the user should have "names" like "Fake Light" for us
   .getCharacteristic(Characteristic.On)
   .on('set', function(value, callback) {
-    if(perifSel!=null){
+     if(perifSel!=null){
 	//console.log("... Click -> Perif: " + perifSel.state + " / Luz: " + bulb.connected);
 	if(value==true){
-	   //console.log("... Encendiendo %d!", txtIdLamp);
+	   console.log("... Encendiendo %s!", txtIdLamp);
 	}else{
-	   //console.log("... Apagando %s!", txtIdLamp);
+	   console.log("... Apagando %s!", txtIdLamp);
 	}
 	// Ahora se hace la solicitud a la función si está conectado el leBT
 	if((perifSel.state == "connected") && (bulb.connected==true)){
@@ -116,10 +127,10 @@ light
 	   OFFICELIGHT.setPowerOn(value);
 	   callback();
 	}
-    }else{
-      console.log("... La luz aun no está disponible o está desconectada!!");
-      callback(new Error("Device not Ready"));
-    }
+     }else{
+        console.log("... La luz aun no está disponible o está desconectada!!");
+        callback(new Error("Device not Ready"));
+     }
   });
 
 // We want to intercept requests for our current power state so we can query the hardware itself instead of
@@ -225,7 +236,7 @@ light
      }
    })
    .on('set',function(value,callback){
-     //console.log("... Nuevo valor de matiz: %s", value);
+     console.log("... Nuevo valor de matiz: %s", value);
      if(perifSel!=null){
        // Ahora se hace la solicitud a la función si está conectado el leBT
        if((perifSel.state == "connected") && (bulb.connected==true)){
@@ -255,7 +266,7 @@ light
      }
    })
    .on('set',function(value,callback){
-     //console.log("... Nuevo valor de saturacion: %s", value);
+     console.log("... Nuevo valor de saturacion: %s", value);
      if(perifSel!=null){
        // Ahora se hace la solicitud a la función si está conectado el leBT
        if((perifSel.state == "connected") && (bulb.connected==true)){
@@ -287,7 +298,12 @@ noble.on("discover", function(peripheral) {
        	  //console.log('... (Init) conectando el dispositivo: ' + perifSel.uuid);
        	  bulb = new avea.Avea(perifSel);
        	  bulb.connect();
-       	  //console.log("... (Init) Perif: " + perifSel.state + " / Luz: " + bulb.connected);
+       	  console.log("... (Init) Perif: " + perifSel.state + " / Luz: " + bulb.connected);
+
+	  // This line changes the init value and communicates the change to the service, i.e to siri.
+	  //light
+  	  //  .getService(Service.Lightbulb)
+  	  //  .setCharacteristic(Characteristic.On,false);
         });
      }
   // De ahí en adelante tan solo se reconecta la luz y ya conecta el dispositivo al hacerlo
@@ -307,36 +323,40 @@ noble.on('stateChange', function(state) {
         noble.stopScanning();
   }
 });
-//
+
 // Here we show the list of Siri voice commands accepted with this accessory file.
 // ***********************************************************************************
 // The name asigned in the ios home app to this sample device is "Lámpara de Pie" and it is placed in a room called "Comedor" for the spanish version, 
-// if you use any other  name or room use the name assigned instead of the name shown here. This section is only informative, there is no code here, so 
+// if you use any other name or room use the name assigned instead of the name shown here. This section is only informative, there is no code here, so 
 // any change inside this section do not affect the behaviour of the ios home app.
 // --------------------------------------------------
 //  Accessory room(english): "living-room"
 //  Accessory room(spanish): "Comedor"
-//   Accessory room(german): "****"
+//   Accessory room(german): "Wohnzimmer"
 //      Accessory room(...): "****"
 // --------------------------------------------------
 //  Accessory name(english): "lamp"
 //  Accessory name(spanish): "Lámpara de Pie"
-//   Accessory name(german): "*****"
+//   Accessory name(german): "Lampe"
 //      Accessory name(...): "*****"
 // --------------------------------------------------
 //       Command 1(english): "turn on the living room lamp"
 //       Command 1(spanish): "Enciende la lampara de pie del comedor"
-//        Command 1(german): "*****"
+//        Command 1(german): "Wohnzimmer Lampe einschalten"
+//           Command 1(...): "*****"
 // --------------------------------------------------
 //       Command 2(english): "turn off the living room lamp"
 //       Command 2(spanish): "Apaga la lampara de pie del comedor"
-//        Command 3(german): "*****"
+//        Command 2(german): "Wohnzimmer Lampe ausschalten"
+//           Command 2(...): "*****"
 // --------------------------------------------------
 //       Command 3(english): change the brightness of the living room lamp to 50
 //       Command 3(spanish): Cambia el brillo de la Lámpara de Pie a 50
-//        Command 3(german): "*****"
+//        Command 3(german): "Wohnzimmer Lampe 30%"
+//           Command 3(...): "*****"
 // --------------------------------------------------
 //       Command 4(english): change the color of the living room lamp to red
 //       Command 4(spanish): Cambia el color de la Lámpara de Pie a rojo
-//        Command 4(german): "*****"
+//        Command 4(german): "Licht der Wohnzimmerlampe grün / blau / gelb / orange / pink"  //("rot" wird nicht erkannt)
+//           Command 4(...): "*****"
 // --------------------------------------------------
