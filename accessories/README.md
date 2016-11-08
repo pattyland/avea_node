@@ -6,4 +6,4 @@ This folder contains some accessories that make use of the avea_node lib to cont
 To use them with the Hap-node, download git repository and copy the samples to the accessories folder located under the HAP-node directory of your system.
 
  For instance in OSMC:
- * cp *.accessory.js /home/osmc/HAP-NodeJS
+ * cp *.accessory.js /home/osmc/HAP-NodeJS/accessories
