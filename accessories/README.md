@@ -7,3 +7,6 @@ To use them with the Hap-node, download git repository and copy the samples to t
 
  For instance in OSMC:
  * cp *.accessory.js /home/osmc/HAP-NodeJS/accessories
+
+
+ Find more info in the wiki https://github.com/Alblahm/avea_node/wiki
