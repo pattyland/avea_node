@@ -204,14 +204,14 @@ light
   .addCharacteristic(Characteristic.Brightness)
   .on('get', function(callback) {
      if(perifSel!=null){
-     	//console.log("... El brillo de %s estaba fijado a %s", txtIdLamp, OFFICELIGHT.brightness);
+     	//console.log("... The brightness of the %s was %s", txtIdLamp, OFFICELIGHT.brightness);
      	callback(null, OFFICELIGHT.brightness);
      }else{
 	callback(new Error("Device not Ready"));
      }
   })
   .on('set', function(value, callback) {
-     console.log("... Nuevo valor de brillo: %s", value);
+     console.log("... New brightness value: %s", value);
      if(perifSel!=null){
        // Ahora se hace la solicitud a la función si está conectado el leBT
        if((perifSel.state == "connected") && (bulb.connected==true)){
@@ -219,7 +219,7 @@ light
     	   callback();
 	   // Our fake Light is synchronous - this value has been successfully set
        }else{
-	   console.log("reconectando... ");
+	   console.log("reconnecting... ");
 	   noble.startScanning(['f815e810456c6761746f4d756e696368'], false);
 	   OFFICELIGHT.setBrightness(value);
 	   callback();
@@ -241,7 +241,7 @@ light
      }
    })
    .on('set',function(value,callback){
-     console.log("... Nuevo valor de matiz: %s", value);
+     console.log("... New Hue value: %s", value);
      if(perifSel!=null){
        // Ahora se hace la solicitud a la función si está conectado el leBT
        if((perifSel.state == "connected") && (bulb.connected==true)){
@@ -249,7 +249,7 @@ light
     	   callback();
 	   // Our fake Light is synchronous - this value has been successfully set
        }else{
-	   console.log("reconectando... ");
+	   console.log("reconnecting... ");
 	   noble.startScanning(['f815e810456c6761746f4d756e696368'], false);
 	   OFFICELIGHT.setHue(value);
 	   callback();
@@ -271,7 +271,7 @@ light
      }
    })
    .on('set',function(value,callback){
-     console.log("... Nuevo valor de saturacion: %s", value);
+     console.log("... New saturation value: %s", value);
      if(perifSel!=null){
        // Ahora se hace la solicitud a la función si está conectado el leBT
        if((perifSel.state == "connected") && (bulb.connected==true)){
@@ -279,7 +279,7 @@ light
     	   callback();
 	   // Our fake Light is synchronous - this value has been successfully set
        }else{
-	   console.log("reconectando... ");
+	   console.log("reconnecting... ");
 	   noble.startScanning(['f815e810456c6761746f4d756e696368'], false);
 	   OFFICELIGHT.setSaturation(value);
 	   callback();
