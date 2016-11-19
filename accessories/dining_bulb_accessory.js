@@ -47,7 +47,7 @@ var OFFICELIGHT = {
   powerOn: false,
   brightness: 100, // percentage
   hue: 38,
-  saturation: 99,
+  saturation: 20,
   bChangeSth: false,
 
   setPowerOn: function(onValue) { 
@@ -80,14 +80,16 @@ var OFFICELIGHT = {
     if(posValue==true){
       //console.log("... Encendiendo %s!",txtIdLamp);
       //console.log("... Enviando comando a la luz");
-      //console.log("... Color AVEA: Hue:" + (OFFICELIGHT.hue).toString() + ", Sat:" + (OFFICELIGHT.saturation).toString() + ", Bright:" + (OFFICELIGHT.brightness).toString());
-      var myHsbColor = colorS('hsv(' + (OFFICELIGHT.hue).toString() + ',' + (OFFICELIGHT.saturation).toString() + ',' + (OFFICELIGHT.brightness).toString() +')');
-      //console.log("... Color  RGB: RED:" + Math.floor(myHsbColor.red()*255).toString() + ", GREEN:" + Math.floor(myHsbColor.green()*255).toString() + ", BLUE:" + Math.floor(myHsbColor.blue()*255).toString());
-      var rComp="0x" + Math.floor(Math.min(4095,(myHsbColor.red()*4096))).toString(16).toUpperCase();
-      var gComp="0x" + Math.floor(Math.min(4095,(myHsbColor.green()*4096))).toString(16).toUpperCase();
-      var bComp="0x" + Math.floor(Math.min(4095,(myHsbColor.blue()*4096))).toString(16).toUpperCase();
-      var iComp="0x" + Math.floor(Math.min(4095,(Math.max(0,(OFFICELIGHT.brightness-30))*4096)/100)).toString(16).toUpperCase();
-      bulb.setColor(new avea.Color(iComp, rComp, gComp, bComp), 0x0ff);
+      //console.log(optilog()+"Hue: " + (OFFICELIGHT.hue).toString() + ", Sat: " + (OFFICELIGHT.saturation).toString() + ", Bright: " + (OFFICELIGHT.brightness).toString());
+      var myHsbColor = colorS('hsv(' + (OFFICELIGHT.hue).toString() + ',' + (100).toString() + ',' + (OFFICELIGHT.brightness).toString() +')');
+      //console.log(optilog()+"R: " + Math.round(myHsbColor.red()*4095).toString() + ", G: " + Math.round(myHsbColor.green()*4095).toString() + ", B:" + Math.round(myHsbColor.blue()*4095).toString());
+      var rComp="0x" + Math.round(myHsbColor.red()*4095).toString(16).toUpperCase();
+      var gComp="0x" + Math.round(myHsbColor.green()*4095).toString(16).toUpperCase();
+      var bComp="0x" + Math.round(myHsbColor.blue()*4095).toString(16).toUpperCase();
+      var iComp="0x" + Math.round((100-OFFICELIGHT.saturation)*0.01*OFFICELIGHT.brightness*0.01*4095).toString(16).toUpperCase();
+      //console.log(optilog()+"iComp: " + Math.round((100-OFFICELIGHT.saturation)*0.01*OFFICELIGHT.brightness*0.01*4095));
+	  //console.log(optilog()+"r: " + rComp + ", g: " + gComp + ", b:" + bComp + ", w:" + iComp);
+	  bulb.setColor(new avea.Color(iComp, rComp, gComp, bComp), 0x0ff);
     }else{
       //console.log("... Apagando %s!", txtIdLamp);
       bulb.setColor(new avea.Color(0x000, 0x000, 0x000, 0x000), 0x5ff);
@@ -132,32 +134,32 @@ light
 // Add the actual Lightbulb Service and listen for change events from iOS.
 // We can see the complete list of Services and Characteristics in `lib/gen/HomeKitTypes.js`
 light
-  .addService(Service.Lightbulb, txtIdLamp) // services exposed to the user should have "names" like "Fake Light" for us
-  .getCharacteristic(Characteristic.On)
-  .on('set', function(value, callback) {
-     if(perifSel!=null){
-	//console.log("... Click -> Perif: " + perifSel.state + " / Luz: " + bulb.connected);
-	if(value==true){
-	   console.log(optilog()+"is switched on!");
-	}else{
-	   console.log(optilog()+"is switched off!");
-	}
-	// Ahora se hace la solicitud a la función si está conectado el leBT
-	if((perifSel.state == "connected") && (bulb.connected==true)){
-    	   OFFICELIGHT.setPowerOn(value);
-    	   callback();
-	   // Our fake Light is synchronous - this value has been successfully set
-	}else{
-	   console.log(optilog());
-	   noble.startScanning(serviceUUID, false);
-	   OFFICELIGHT.setPowerOn(value);
-	   callback();
-	}
-     }else{
-      console.log(optilog()+"Device not Ready");
-	  callback(new Error("Device not Ready"));
-     }
-  });
+	.addService(Service.Lightbulb, txtIdLamp) // services exposed to the user should have "names" like "Fake Light" for us
+	.getCharacteristic(Characteristic.On)
+	.on('set', function(value, callback) {
+		if(perifSel!=null){
+		//console.log("... Click -> Perif: " + perifSel.state + " / Luz: " + bulb.connected);
+			if(value==true){
+				console.log(optilog()+"is hard powered on!");
+			} else {
+				console.log(optilog()+"seems to be hard powered off!");
+			}
+			// Ahora se hace la solicitud a la función si está conectado el leBT
+			if((perifSel.state == "connected") && (bulb.connected==true)){
+				OFFICELIGHT.setPowerOn(value);
+				callback();
+				// Our fake Light is synchronous - this value has been successfully set
+			} else { 
+				noble.startScanning(serviceUUID, false);
+				OFFICELIGHT.setPowerOn(value);
+				console.log(optilog());
+				callback();
+			}
+		} else {
+			console.log(optilog()+"Device not Ready");
+			callback(new Error("Device not Ready"));
+		}
+	});
 
 // We want to intercept requests for our current power state so we can query the hardware itself instead of
 // allowing HAP-NodeJS to return the cached Characteristic.value.
