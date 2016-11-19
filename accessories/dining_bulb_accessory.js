@@ -140,9 +140,9 @@ light
 		if(perifSel!=null){
 		//console.log("... Click -> Perif: " + perifSel.state + " / Luz: " + bulb.connected);
 			if(value==true){
-				console.log(optilog()+"is hard powered on!");
+				console.log(optilog()+"switching on!");
 			} else {
-				console.log(optilog()+"seems to be hard powered off!");
+				console.log(optilog()+"switching off!");
 			}
 			// Ahora se hace la solicitud a la función si está conectado el leBT
 			if((perifSel.state == "connected") && (bulb.connected==true)){
