@@ -68,3 +68,6 @@ The name is received as a null terminated string. For example: `0x58 0x45 0x6c 0
 Brightness goes from 0-4095 and is send and received as little endian value.
 
 e.g. `0x57ff0f` for 4095.
+
+More info in:
+https://github.com/Alblahm/avea_node/wiki
