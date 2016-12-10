@@ -15,7 +15,7 @@ var serviceUUID = ["f815e810456c6761746f4d756e696368"];
 // enter your Avea bulb identifications below
 const uuidMyLamp = "7cec79d75f47";
 const sernoBulb = "475FD779EC7C";
-const txtIdLamp="Esstischlampe"; 
+const txtIdLamp= "Esstischlampe"; 
 
 function optilog()
 {
@@ -97,7 +97,7 @@ var OFFICELIGHT = {
     }
   },
   identify: function() {
-    console.log(optilog()+"Identify");
+	console.log(optilog()+"Identify");
   }
 }
 
@@ -136,27 +136,20 @@ light
 light
 	.addService(Service.Lightbulb, txtIdLamp) // services exposed to the user should have "names" like "Fake Light" for us
 	.getCharacteristic(Characteristic.On)
+
 	.on('set', function(value, callback) {
-		if(perifSel!=null){
-		//console.log("... Click -> Perif: " + perifSel.state + " / Luz: " + bulb.connected);
+		if ((perifSel!=null) && (perifSel.state == "connected") && (bulb.connected==true)) {
 			if(value==true){
 				console.log(optilog()+"switching on!");
 			} else {
 				console.log(optilog()+"switching off!");
 			}
-			// Ahora se hace la solicitud a la función si está conectado el leBT
-			if((perifSel.state == "connected") && (bulb.connected==true)){
-				OFFICELIGHT.setPowerOn(value);
-				callback();
-				// Our fake Light is synchronous - this value has been successfully set
-			} else { 
-				noble.startScanning(serviceUUID, false);
-				OFFICELIGHT.setPowerOn(value);
-				console.log(optilog());
-				callback();
-			}
+			OFFICELIGHT.setPowerOn(value);
+			callback();
+			// Our fake Light is synchronous - this value has been successfully set
 		} else {
-			console.log(optilog()+"Device not Ready");
+			noble.startScanning(serviceUUID, false);
+			console.log(optilog()+"Device not Ready, called startScanning...");
 			callback(new Error("Device not Ready"));
 		}
 	});
@@ -223,96 +216,90 @@ light
 
 // also add an "optional" Characteristic for Brightness
 light
-  .getService(Service.Lightbulb)
-  .addCharacteristic(Characteristic.Brightness)
-  .on('get', function(callback) {
-     if(perifSel!=null){
-     	//console.log("... El brillo de %s estaba fijado a %s", txtIdLamp, OFFICELIGHT.brightness);
-     	callback(null, OFFICELIGHT.brightness);
-     }else{
-	callback(new Error("Device not Ready"));
-     }
-  })
-  .on('set', function(value, callback) {
-     console.log(optilog()+"brightness: %s", value);
-     if(perifSel!=null){
-       // Ahora se hace la solicitud a la función si está conectado el leBT
-       if((perifSel.state == "connected") && (bulb.connected==true)){
-    	   OFFICELIGHT.setBrightness(value);
-    	   callback();
-	   // Our fake Light is synchronous - this value has been successfully set
-       }else{
-	   console.log(optilog()+"reconnection initiated to set brightness...");
-	   noble.startScanning(serviceUUID, false);
-	   OFFICELIGHT.setBrightness(value);
-	   callback();
-       }
-     }else{
-	callback(new Error("Device not Ready"));
-     }
-  });
+	.getService(Service.Lightbulb)
+	.addCharacteristic(Characteristic.Brightness)
+
+	.on('get', function(callback) {
+		if ((perifSel!=null) && (perifSel.state == "connected") && (bulb.connected==true)) {
+			console.log(optilog()+"get brightness: %s", OFFICELIGHT.brightness);
+			callback(null, OFFICELIGHT.brightness);
+		} else {
+			noble.startScanning(serviceUUID, false);
+			console.log(optilog()+"Device not Ready, called startScanning...");
+			callback(new Error("Device not Ready"));
+		}
+	})
+
+	.on('set', function(value, callback) {
+		if ((perifSel!=null) && (perifSel.state == "connected") && (bulb.connected==true)) {
+			console.log(optilog()+"set brightness: %s", value);
+			OFFICELIGHT.setBrightness(value);
+			callback();
+			// Our fake Light is synchronous - this value has been successfully set
+		} else {
+			noble.startScanning(serviceUUID, false);
+			console.log(optilog()+"Device not Ready, called startScanning...");
+			callback(new Error("Device not Ready"));
+		}
+	});
 
 // also add an "optional" Characteristic for hue
 light
-  .getService(Service.Lightbulb)
-  .addCharacteristic(Characteristic.Hue)
-  .on('get',function(callback){
-     if(perifSel!=null){
-     	console.log(optilog()+"get hue: %s", OFFICELIGHT.hue);
-     	callback(null, OFFICELIGHT.hue);
-     }else{
-	callback(new Error("Device not Ready"));
-     }
-   })
-   .on('set',function(value,callback){
-     console.log(optilog()+"set hue: %s", value);
-     if(perifSel!=null){
-       // Ahora se hace la solicitud a la función si está conectado el leBT
-       if((perifSel.state == "connected") && (bulb.connected==true)){
-    	   OFFICELIGHT.setHue(value);
-    	   callback();
-	   // Our fake Light is synchronous - this value has been successfully set
-       }else{
-	   console.log(optilog()+"reconnection initiated to set hue...");
-	   noble.startScanning(serviceUUID, false);
-	   OFFICELIGHT.setHue(value);
-	   callback();
-       }
-     }else{
-	callback(new Error("Device not Ready"));
-     }
-   });
+	.getService(Service.Lightbulb)
+	.addCharacteristic(Characteristic.Hue)
+
+	.on('get',function(callback){
+		if ((perifSel!=null) && (perifSel.state == "connected") && (bulb.connected==true)) {
+			console.log(optilog()+"get hue: %s", OFFICELIGHT.hue);
+			callback(null, OFFICELIGHT.hue);
+		} else {
+			noble.startScanning(serviceUUID, false);
+			console.log(optilog()+"Device not Ready, called startScanning...");
+			callback(new Error("Device not Ready"));
+		}
+	})
+
+	.on('set',function(value,callback){
+		if ((perifSel!=null) && (perifSel.state == "connected") && (bulb.connected==true)) {
+			console.log(optilog()+"set hue: %s", value);
+			OFFICELIGHT.setHue(value);
+			callback();
+			// Our fake Light is synchronous - this value has been successfully set
+		} else {
+			noble.startScanning(serviceUUID, false);
+			console.log(optilog()+"Device not Ready, called startScanning...");
+			callback(new Error("Device not Ready"));
+		}
+	})
 
 // also add an "optional" Characteristic for saturation
 light
-  .getService(Service.Lightbulb)
-  .addCharacteristic(Characteristic.Saturation)
-  .on('get',function(callback){
-     if(perifSel!=null){
-     	console.log(optilog()+"get saturdation: %s", OFFICELIGHT.saturation);
-     	callback(null, OFFICELIGHT.saturation);
-     }else{
-	callback(new Error("Device not Ready"));
-     }
-   })
-   .on('set',function(value,callback){
-     console.log(optilog()+"set saturdation: %s", value);
-     if(perifSel!=null){
-       // Ahora se hace la solicitud a la función si está conectado el leBT
-       if((perifSel.state == "connected") && (bulb.connected==true)){
-    	   OFFICELIGHT.setSaturation(value);
-    	   callback();
-	   // Our fake Light is synchronous - this value has been successfully set
-       }else{
-	   console.log(optilog()+"reconnection initiated to set saturdation...");
-	   noble.startScanning(serviceUUID, false);
-	   OFFICELIGHT.setSaturation(value);
-	   callback();
-       }
-     }else{
-	callback(new Error("Device not Ready"));
-     }
-   });
+	.getService(Service.Lightbulb)
+	.addCharacteristic(Characteristic.Saturation)
+
+	.on('get',function(callback){
+		if ((perifSel!=null) && (perifSel.state == "connected") && (bulb.connected==true)) {
+			console.log(optilog()+"get saturdation: %s", OFFICELIGHT.saturation);
+			callback(null, OFFICELIGHT.saturation);
+		} else {
+			noble.startScanning(serviceUUID, false);
+			console.log(optilog()+"Device not Ready, called startScanning...");
+			callback(new Error("Device not Ready"));
+		}
+	})
+	
+	.on('set',function(value,callback){
+		if ((perifSel!=null) && (perifSel.state == "connected") && (bulb.connected==true)) {
+			console.log(optilog()+"set saturdation: %s", value); 
+			OFFICELIGHT.setSaturation(value);
+			callback();
+			// Our fake Light is synchronous - this value has been successfully set
+		} else {
+			noble.startScanning(serviceUUID, false);
+			console.log(optilog()+"Device not Ready, called startScanning...");
+			callback(new Error("Device not Ready"));
+		}
+	})
 
 // Mas info del paquete noble en: https://www.npmjs.com/package/noble
 noble.on("discover", function(peripheral) {
@@ -339,7 +326,10 @@ if(perifSel==null){
 	} else {
 		console.log(optilog()+"discovered "+peripheral.uuid);
 		if(peripheral.uuid==uuidMyLamp){
-			console.log(optilog()+"lost bulb appears again!")
+			console.log(optilog()+"lost bulb appears again!");
+			perifSel=peripheral;
+			bulb = new avea.Avea(perifSel);
+			bulb.connect();
 		} else {
 			console.log(optilog()+"nothing important to me...");
 			//noble.startScanning(serviceUUID, false);
@@ -347,24 +337,24 @@ if(perifSel==null){
 	}
 });
 
-noble.on('scanStop', function(callback) {
-	console.log(optilog()+"scanStop received")
-	if(!bulb){
-		noble.startScanning(serviceUUID, false);
-		console.log(optilog()+"startScanning again (bulb not defined)......");
-	} else {
-		if (bulb.connected==false){
-			noble.startScanning(serviceUUID, false);
-			console.log(optilog()+"startScanning again (bulb not connected)......");
-		}
-	}
-});
+//noble.on('scanStop', function(callback) {
+//	console.log(optilog()+"scanStop received")
+//	if(!bulb){
+//		noble.startScanning(serviceUUID, false);
+//		console.log(optilog()+"startScanning again (bulb not defined)......");
+//	} else {
+//		if (bulb.connected==false){
+//			noble.startScanning(serviceUUID, false);
+//			console.log(optilog()+"startScanning again (bulb not connected)......");
+//		}
+//	}
+//});
 
 
 
-noble.on('scanStart', function(callback) {
-	console.log(optilog()+"scanStart received")
-});
+//noble.on('scanStart', function(callback) {
+//	console.log(optilog()+"scanStart received")
+//});
 
 // Tras iniciar el programa cambia el estado del servicio a poweredOn, y se lanza un scan de dispositivos
 noble.on('stateChange', function(state) {
