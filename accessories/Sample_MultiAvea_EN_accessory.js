@@ -8,6 +8,7 @@ var colorS = require("onecolor");
 
 var bulb = null;
 var perifSel = null;
+var scanning = false;
 
 
 var serviceUUID = ["f815e810456c6761746f4d756e696368"];
@@ -15,7 +16,8 @@ var serviceUUID = ["f815e810456c6761746f4d756e696368"];
 // enter your Avea bulb identifications below
 const uuidMyLamp = "7cec79d75f47";
 const sernoBulb = "475FD779EC7C";
-const txtIdLamp= "Esstischlampe"; 
+const txtIdLamp = "Esstischlampe";
+const elgatoID = "Avea_475F";
 
 function optilog()
 {
@@ -111,7 +113,7 @@ if (uuidMyLamp == null) {
 }
 
 // This is the Accessory that we'll return to HAP-NodeJS that represents our fake light.
-var light = exports.accessory = new Accessory('Office Light', lightUUID);
+var light = exports.accessory = new Accessory(elgatoID, lightUUID);
 
 // Add properties for publishing (in case we're using Core.js and not BridgedCore.js)
 light.username = "FF:FA:FF:CF:DF:1A";
@@ -148,8 +150,8 @@ light
 			callback();
 			// Our fake Light is synchronous - this value has been successfully set
 		} else {
-			noble.startScanning(serviceUUID, false);
-			console.log(optilog()+"Device not Ready, called startScanning...");
+			if (!scanning) {noble.startScanning(serviceUUID, false)};
+			console.log(optilog()+"Device not Ready");
 			callback(new Error("Device not Ready"));
 		}
 	});
@@ -157,62 +159,41 @@ light
 // We want to intercept requests for our current power state so we can query the hardware itself instead of
 // allowing HAP-NodeJS to return the cached Characteristic.value.
 light
-  .getService(Service.Lightbulb)
-  .getCharacteristic(Characteristic.On)
-  .on('get', function(callback) {
+	.getService(Service.Lightbulb)
+	.getCharacteristic(Characteristic.On)
+	.on('get', function(callback) {
     
-    // this event is emitted when you ask Siri directly whether your light is on or not. you might query
-    // the light hardware itself to find this out, then call the callback. But if you take longer than a
-    // few seconds to respond, Siri will give up.
+		// this event is emitted when you ask Siri directly whether your light is on or not. you might query
+		// the light hardware itself to find this out, then call the callback. But if you take longer than a
+		// few seconds to respond, Siri will give up.
     
-    var err = null; // in case there were any problems
-    // Ahora se hace la solicitud a la función si está conectado el leBT
-    if(perifSel!=null){
-      // Se lee el valor actual de data devuelto por Promise, que contendrá algo como: 
-      // { current: Color { white: 0, red: 0, green: 0, blue: 0 }, target: Color { white: 0, red: 0, green: 0, blue: 0 } }
-      if((perifSel.state == "connected") && (bulb.connected==true)){
-    	Promise.resolve(bulb.getColor()).then((data) => {
-	   var bCheckColor=((data.target.white==0)&&(data.target.red==0)&&(data.target.green==0)&&(data.target.blue==0));
-	   //console.log(data.target);
-	   if (bCheckColor == true){
-		console.log(optilog()+"off");
-		OFFICELIGHT.powerOn = false;
-		callback(err, false);
-	   }else{
-		console.log(optilog()+"on");
-		OFFICELIGHT.powerOn = true;
-		//OFFICELIGHT.brightness = parseInt(data.current.white)*100/4096;
-		callback(err, true, OFFICELIGHT.brightness);
-	   }
-    	}).catch(e => {
-           console.log(e);
-    	});
-      }else{
-	console.log(optilog());
-	noble.startScanning(serviceUUID, false);
-	Promise.resolve(bulb.getColor()).then((data) => {
-	   var bCheckColor=((data.target.white==0)&&(data.target.red==0)&&(data.target.green==0)&&(data.target.blue==0));
-	   //console.log(data.target);
-	   if (bCheckColor == true){
-		console.log(optilog()+"off");
-		OFFICELIGHT.powerOn = false;
-		callback(err, false);
-	   }else{
-		console.log(optilog()+"on");
-		OFFICELIGHT.powerOn = true;
-		//OFFICELIGHT.brightness = parseInt(data.current.white)*100/4096;
-		callback(err, true, OFFICELIGHT.brightness);
-	   }
-    	}).catch(e => {
-           console.log(e);
-    	});
-      }
-    }else{
-      console.log(optilog()+"Device not Ready");
-      callback(new Error("Device not Ready"));
-  }
-
-  });
+		var err = null; // in case there were any problems
+		// Ahora se hace la solicitud a la función si está conectado el leBT
+		if ((perifSel!=null) && (perifSel.state == "connected") && (bulb.connected==true)) {
+			// Se lee el valor actual de data devuelto por Promise, que contendrá algo como: 
+			// { current: Color { white: 0, red: 0, green: 0, blue: 0 }, target: Color { white: 0, red: 0, green: 0, blue: 0 } }
+			Promise.resolve(bulb.getColor()).then((data) => {
+				var bCheckColor=((data.target.white==0)&&(data.target.red==0)&&(data.target.green==0)&&(data.target.blue==0));
+				//console.log(data.target);
+				if (bCheckColor == true){
+					console.log(optilog()+"off");
+					OFFICELIGHT.powerOn = false;
+					callback(err, false);
+				} else {
+					console.log(optilog()+"on");
+					OFFICELIGHT.powerOn = true;
+					//OFFICELIGHT.brightness = parseInt(data.current.white)*100/4096;
+					callback(err, true, OFFICELIGHT.brightness);
+				}
+			}).catch(e => {
+				console.log(e);
+			});
+		} else {
+			if (!scanning) {noble.startScanning(serviceUUID, false)};
+			console.log(optilog()+"Device not Ready");
+			callback(new Error("Device not Ready"));
+		}
+	});
 
 // also add an "optional" Characteristic for Brightness
 light
@@ -224,8 +205,8 @@ light
 			console.log(optilog()+"get brightness: %s", OFFICELIGHT.brightness);
 			callback(null, OFFICELIGHT.brightness);
 		} else {
-			noble.startScanning(serviceUUID, false);
-			console.log(optilog()+"Device not Ready, called startScanning...");
+			if (!scanning) {noble.startScanning(serviceUUID, false)};
+			console.log(optilog()+"Device not Ready");
 			callback(new Error("Device not Ready"));
 		}
 	})
@@ -237,8 +218,8 @@ light
 			callback();
 			// Our fake Light is synchronous - this value has been successfully set
 		} else {
-			noble.startScanning(serviceUUID, false);
-			console.log(optilog()+"Device not Ready, called startScanning...");
+			if (!scanning) {noble.startScanning(serviceUUID, false)};
+			console.log(optilog()+"Device not Ready");
 			callback(new Error("Device not Ready"));
 		}
 	});
@@ -253,8 +234,8 @@ light
 			console.log(optilog()+"get hue: %s", OFFICELIGHT.hue);
 			callback(null, OFFICELIGHT.hue);
 		} else {
-			noble.startScanning(serviceUUID, false);
-			console.log(optilog()+"Device not Ready, called startScanning...");
+			if (!scanning) {noble.startScanning(serviceUUID, false)};
+			console.log(optilog()+"Device not Ready");
 			callback(new Error("Device not Ready"));
 		}
 	})
@@ -266,8 +247,8 @@ light
 			callback();
 			// Our fake Light is synchronous - this value has been successfully set
 		} else {
-			noble.startScanning(serviceUUID, false);
-			console.log(optilog()+"Device not Ready, called startScanning...");
+			if (!scanning) {noble.startScanning(serviceUUID, false)};
+			console.log(optilog()+"Device not Ready");
 			callback(new Error("Device not Ready"));
 		}
 	})
@@ -282,8 +263,8 @@ light
 			console.log(optilog()+"get saturdation: %s", OFFICELIGHT.saturation);
 			callback(null, OFFICELIGHT.saturation);
 		} else {
-			noble.startScanning(serviceUUID, false);
-			console.log(optilog()+"Device not Ready, called startScanning...");
+			if (!scanning) {noble.startScanning(serviceUUID, false)};
+			console.log(optilog()+"Device not Ready");
 			callback(new Error("Device not Ready"));
 		}
 	})
@@ -295,8 +276,8 @@ light
 			callback();
 			// Our fake Light is synchronous - this value has been successfully set
 		} else {
-			noble.startScanning(serviceUUID, false);
-			console.log(optilog()+"Device not Ready, called startScanning...");
+			if (!scanning) {noble.startScanning(serviceUUID, false)};
+			console.log(optilog()+"Device not Ready");
 			callback(new Error("Device not Ready"));
 		}
 	})
@@ -324,12 +305,17 @@ if(perifSel==null){
 	}
 	// De ahí en adelante tan solo se reconecta la luz y ya conecta el dispositivo al hacerlo
 	} else {
+		// do a reconnect if uuid matches
 		console.log(optilog()+"discovered "+peripheral.uuid);
 		if(peripheral.uuid==uuidMyLamp){
 			console.log(optilog()+"lost bulb appears again!");
 			perifSel=peripheral;
-			bulb = new avea.Avea(perifSel);
-			bulb.connect();
+			if(perifSel.state!="connected") {
+				bulb = new avea.Avea(perifSel);
+				bulb.connect();
+			} else {
+				console.log(optilog()+"undefined state ##############");
+			}
 		} else {
 			console.log(optilog()+"nothing important to me...");
 			//noble.startScanning(serviceUUID, false);
@@ -337,24 +323,21 @@ if(perifSel==null){
 	}
 });
 
-//noble.on('scanStop', function(callback) {
-//	console.log(optilog()+"scanStop received")
-//	if(!bulb){
-//		noble.startScanning(serviceUUID, false);
-//		console.log(optilog()+"startScanning again (bulb not defined)......");
-//	} else {
-//		if (bulb.connected==false){
-//			noble.startScanning(serviceUUID, false);
-//			console.log(optilog()+"startScanning again (bulb not connected)......");
-//		}
-//	}
-//});
+noble.on('scanStop', function(callback) {
+	console.log(optilog()+"scanStop received");
+	scanning = false;
+});
 
 
 
-//noble.on('scanStart', function(callback) {
-//	console.log(optilog()+"scanStart received")
-//});
+noble.on('scanStart', function(callback) {
+	console.log(optilog()+"scanStart received");
+	scanning = true;
+});
+
+noble.on('warning', function(message) {
+	console.log(optilog()+"noble: " + message);
+});
 
 // Tras iniciar el programa cambia el estado del servicio a poweredOn, y se lanza un scan de dispositivos
 noble.on('stateChange', function(state) {
