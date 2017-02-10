@@ -3,7 +3,7 @@ var Service = require('../').Service;
 var Characteristic = require('../').Characteristic;
 var uuid = require('../').uuid;
 var noble = require("noble");
-var avea = require("avea_node");
+var avea = require("avea_bulb");
 var colorS = require("onecolor");
 
 var bulb = null;
